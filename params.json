@@ -1,0 +1,15 @@
+{
+    "bling_client_id":""
+    ,"bling_client_secret":""
+
+    ,"autoModifySituations": 0
+    ,"situationsToGetLogistics":["Em aberto"]
+    
+    ,"situationToNotify": {
+        "NF-e \\(emitir\\)" : {"notifyNew" : 1, "notifyOld": 1}
+        
+    }
+
+    ,"late_param": 8
+    ,"late_timerLoop": 6
+}
