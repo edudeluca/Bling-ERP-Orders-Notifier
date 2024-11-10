@@ -2,10 +2,12 @@ import os
 import re
 import json
 import base64
+import logging
 
 import requests
 import pandas as pd
 
+# ----------------------------------------------------------------- #
 class BlingDfTreat():
     def __init__(self, dataframe):
         self.dataframe = dataframe
@@ -109,7 +111,7 @@ class BlingRequests():
         data = response['data']
         return data
     
-    def get(url:str):
+    def get(url: str):
         return requests.get(url=url, headers=BlingRequests.header()).json()
 
     def header():
@@ -166,14 +168,8 @@ class BlingAuth():
         }
 
         token_response = requests.post(url,headers=headers, data=body).json()
-        print(token_response)
-        bling_tokens = {k:v for k,v in token_response.items() if k == 'access_token' or k == 'refresh_token'}
 
-        if len(bling_tokens) >= 2:
-            with open('bling_tokens.json', 'w') as file:
-                json.dump(bling_tokens,file,indent=4)
-        else:
-            input('Dados de token vazios. Pressione ENTER para continuar...')
+        BlingAuth.write_bling_tokens(token_response)
 
 
     def refreshTokens():
@@ -191,10 +187,17 @@ class BlingAuth():
         }
 
         token_response = requests.post(url,data=data,headers=headers).json()
+        
+        BlingAuth.write_bling_tokens(token_response)
+
+    def write_bling_tokens(token_response):
         bling_tokens = {k:v for k,v in token_response.items() if k == 'access_token' or k == 'refresh_token'}
         
-        with open('bling_tokens.json', 'w') as file:
-            json.dump(bling_tokens,file,indent=4)
+        if bling_tokens:
+            with open('bling_tokens.json', 'w') as file:
+                json.dump(bling_tokens,file,indent=4)
+        else:
+            input('Dados de token vazios. Pressione ENTER para continuar...')
 
 # ----------------------------------------------------------------- #
 class BlingAPI:
@@ -211,5 +214,4 @@ class BlingAPI:
     
     def bling_refresh_token():
         return BlingAPI.read_bling_token()['refresh_token']
-# ----------------------------------------------------------------- #
 # ----------------------------------------------------------------- #
