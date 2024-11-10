@@ -5,7 +5,6 @@ import base64
 
 import requests
 import pandas as pd
-from notifypy import Notify
 
 class BlingDfTreat():
     def __init__(self, dataframe):
@@ -198,5 +197,19 @@ class BlingAuth():
             json.dump(bling_tokens,file,indent=4)
 
 # ----------------------------------------------------------------- #
+class BlingAPI:
+    def read_bling_token():
+        with open('bling_tokens.json', 'r') as file:
+            json_string = file.read()
+
+        bling_tokens = json.loads(json_string)
+
+        return bling_tokens
+    
+    def bling_access_token():
+        return BlingAPI.read_bling_token()['access_token']
+    
+    def bling_refresh_token():
+        return BlingAPI.read_bling_token()['refresh_token']
 # ----------------------------------------------------------------- #
 # ----------------------------------------------------------------- #
