@@ -1,4 +1,13 @@
+import json
+
 from notifypy import Notify
+
+def get_params():
+    with open('params.json', 'r') as file:
+        json_string = file.read()
+
+    params = json.loads(json_string)
+    return params
 
 def getNewOrderNotification(listOfNewOrders : list):
     notify_new = Notify()
