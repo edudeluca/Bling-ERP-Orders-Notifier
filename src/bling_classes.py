@@ -1,6 +1,7 @@
 import os
 import re
 import json
+import time
 import base64
 import logging
 
@@ -112,7 +113,19 @@ class BlingRequests():
         return data
     
     def get(url: str):
-        return requests.get(url=url, headers=BlingRequests.header()).json()
+        time.sleep(0.5)
+        while True:
+            response = requests.get(url=url, headers=BlingRequests.header())
+            if response.status_code == 200:
+                break
+            elif response.status_code == 401:
+                raise(ConnectionRefusedError)
+                print(response.status_code)
+                time.sleep(1)
+
+        json_response = response.json()
+        
+        return json_response
 
     def header():
         header = {       
@@ -162,14 +175,13 @@ class BlingAuth():
             ,'Authorization': f'Basic {BlingAuth.encoded_authorization}'
         }
 
-        body = {
+        data = {
             'grant_type':'authorization_code'
             ,'code':f'{authorization_code}'
         }
 
-        token_response = requests.post(url,headers=headers, data=body).json()
-
-        BlingAuth.write_bling_tokens(token_response)
+        token_reponse_json = BlingAuth.get_post_token_response_json(url, headers, data)
+        BlingAuth.write_bling_tokens(token_reponse_json)
 
 
     def refreshTokens():
@@ -185,12 +197,37 @@ class BlingAuth():
             'grant_type':'refresh_token'
             ,'refresh_token':BlingAPI.bling_refresh_token()
         }
+       
+        token_reponse_json = BlingAuth.get_post_token_response_json(url, headers, data)
+        BlingAuth.write_bling_tokens(token_reponse_json)
+                
+    def get_post_token_response_json(url, headers, data):
+        while True:
+            while True:
+                try:
+                    token_response = requests.post(url,headers=headers, data=data)
+                    break
+                except ConnectionError:
+                    print('ConnectionError')
 
-        token_response = requests.post(url,data=data,headers=headers).json()
-        
-        BlingAuth.write_bling_tokens(token_response)
+            status_code = token_response.status_code
+            token_response_json = token_response.json()
+
+            if token_response.status_code == 200:
+                return token_response_json
+            else:
+                print(f"token_response status code: {status_code}")
 
     def write_bling_tokens(token_response):
+        print(token_response)
+        # FIXME remover ou melhorar esse log
+        with open('token_response.json', 'a') as file:
+            for i in [time.asctime(),json.dumps(token_response)]:
+                file.writelines(i)
+                file.writelines(' - ')
+                
+            file.writelines('\n')
+        
         bling_tokens = {k:v for k,v in token_response.items() if k == 'access_token' or k == 'refresh_token'}
         
         if bling_tokens:
