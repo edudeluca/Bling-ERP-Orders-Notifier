@@ -7,7 +7,6 @@ import logging
 
 import requests
 
-
 from src.utils import (
     get_params,
     getNewOrderNotification,
@@ -21,23 +20,15 @@ from src.bling_classes import (
     BlingRequests
 )
 
-# %%
+# environment variables
 params = get_params()
 autoModifySituations = params['autoModifySituations']
 situationsToGetLogistics = params['situationsToGetLogistics']
 situationToNotify = params['situationToNotify']
-
-if autoModifySituations:
-    verification = input('Aviso: O update automático das situações de pedido está ativado, deseja prosseguir? [s/n]: ')
-    
-    if verification == 's':
-        pass
-    else:
-        exit()
-
 late_param = params['late_param']
 late_timerLoop = params['late_timerLoop']
 
+# validate variables types
 if not(type(situationsToGetLogistics) == list):
     print('situationsToGetLogistics deve ser uma lista')
     input('Pressione ENTER para sair.')
@@ -48,14 +39,23 @@ if not(type(situationToNotify) == dict):
     input('Pressione ENTER para sair.')
     exit()
 
-# %%
+# gets user confirmation to auto update the orders on bling
+if autoModifySituations:
+    verification = input('Aviso: O update automático das situações de pedido está ativado, deseja prosseguir? [s/n]: ')    
+    
+    if verification == 's':
+        pass
+    else:
+        exit()
+
+# 
 waitingOrdersDict = {}
 minutes_running = 0
 late_timer = 0
 
 testloop = True
 loop_interval = (60 - 4)
-loop_interval = (1) #FIXME
+loop_interval = (1) # FIXME
 
 while testloop:
     try:
@@ -66,16 +66,18 @@ while testloop:
         bling.addLogisticColumn(situationsToGetLogistics)
         bling.translateLogisticId()
 
+    except requests.exceptions.ConnectionError as e:
+        print('Erro ao conectar, sem conexão...')
+        time.sleep(1)
+        continue
     except Exception as e:
-        logging.basicConfig(filename="error_log.json", level=logging.ERROR, format='{"timestamp": "%(asctime)s", "level": "%(levelname)s", "message": "%(message)s"}')
+        logging.basicConfig(filename="error_log.json", level=logging.ERROR, format='{"timestamp": "%(asctime)s", "level": "%(levelname)s", "message": "%(message)s"},')
         logging.error(traceback.format_exc())
         print(f'error fetching data from API: {e}')
         BlingAuth.updateBlingToken()
         time.sleep(1)
         continue
-    except requests.exceptions.ConnectionError:
-        print('Erro ao conectar, sem conexão...')
-        continue
+
     if autoModifySituations:
         bling.autoUpdateSituations()
         
@@ -103,6 +105,7 @@ while testloop:
     else:
         waitingOrdersDict = {}
 
+    # displays orders situations
     os.system('cls')
 
     for situation in situationToNotify.keys():
@@ -122,20 +125,27 @@ while testloop:
     print(f'program running for: {minutes_running} minutes\n')
     minutes_running += 1
 
-    # dict used for notifications
-    new = [waitingOrdersDict[i]['num'] for i in waitingOrdersDict if waitingOrdersDict[i]['count'] == 0 and\
-            situationToNotify[waitingOrdersDict[i]['situation']\
-                .replace('(','\(').replace(')','\)')]\
-                    ['notifyNew']]
+    # dicts used for notifications
+    new = [
+        waitingOrdersDict[i]['num'] for i in waitingOrdersDict\
+        if waitingOrdersDict[i]['count'] == 0 and\
+        situationToNotify[waitingOrdersDict[i]['situation']\
+        .replace('(',r'\(').replace(')',r'\)')]\
+        ['notifyNew']
+    ]
     
-    waiting = [waitingOrdersDict[i]['num'] for i in waitingOrdersDict\
-            if (0 < waitingOrdersDict[i]['count'] < late_param)]
+    waiting = [
+        waitingOrdersDict[i]['num'] for i in waitingOrdersDict\
+        if (0 < waitingOrdersDict[i]['count'] < late_param)
+    ]
     
-    late = [waitingOrdersDict[i]['num'] for i in waitingOrdersDict\
-            if waitingOrdersDict[i]['count'] >= late_param and\
-                situationToNotify[waitingOrdersDict[i]['situation']\
-                    .replace('(','\(').replace(')','\)')]\
-                        ['notifyOld']]
+    late = [
+        waitingOrdersDict[i]['num'] for i in waitingOrdersDict\
+        if waitingOrdersDict[i]['count'] >= late_param and\
+        situationToNotify[waitingOrdersDict[i]['situation']\
+        .replace('(',r'\(').replace(')',r'\)')]\
+        ['notifyOld']
+    ]
     
     if new:
         getNewOrderNotification(new)
