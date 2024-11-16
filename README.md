@@ -11,3 +11,4 @@ TODO: describe program purpose and general logic
 - [ ] use a single function for creating notification for both new and late orders
     - This'll make it easier to add notification customization, change sound for different orders situations (like if it still needs to be reserved, or if it just need to be packed)
 - [ ] optimize requests while increasing monitoring (currently it scans only the last 100 orders, which represents bling's first page) and improving performance
+- [ ] add try-catch case when the refresh_token is not valid (`status_code` = 400)
