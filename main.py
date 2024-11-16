@@ -1,4 +1,3 @@
-# %%
 import os
 import re
 import time
@@ -54,8 +53,7 @@ minutes_running = 0
 late_timer = 0
 
 testloop = True
-loop_interval = (60 - 4)
-loop_interval = (1) # FIXME
+loop_interval = (60 - 20)
 
 while testloop:
     try:
