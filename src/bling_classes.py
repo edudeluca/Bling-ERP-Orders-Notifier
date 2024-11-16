@@ -113,15 +113,14 @@ class BlingRequests():
         return data
     
     def get(url: str):
-        time.sleep(0.5)
+        time.sleep(0.2)
         while True:
             response = requests.get(url=url, headers=BlingRequests.header())
             if response.status_code == 200:
                 break
             elif response.status_code == 401:
-                raise(ConnectionRefusedError)
-                print(response.status_code)
                 time.sleep(1)
+                raise(ConnectionRefusedError)
 
         json_response = response.json()
         
